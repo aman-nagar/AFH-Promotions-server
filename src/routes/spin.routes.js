@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   recordSpin,
+  recordGuestSpin,
   getAllSpins,
   getSpinsByCustomer,
   getSpinsBySession,
@@ -27,13 +28,43 @@ const router = Router();
  */
 router.post("/spin", async (req, res, next) => {
   try {
+    const { deviceId } = req.body || {};
+
+    if (deviceId) {
+      const offers = await getActiveOffers();
+
+      if (!offers.length) {
+        throw new ApiError(400, "No active offers available", "NO_OFFERS");
+      }
+
+      const selectedOffer = selectRandomOffer(offers);
+
+      if (!selectedOffer) {
+        throw new ApiError(500, "Failed to select reward", "SELECTION_ERROR");
+      }
+
+      await recordGuestSpin(deviceId, selectedOffer._id);
+
+      res.status(201).json({
+        success: true,
+        data: {
+          rewardId: selectedOffer._id,
+          rewardName: selectedOffer.name,
+          rewardType: selectedOffer.type,
+          rewardValue: selectedOffer.value,
+          sessionStatus: "guest",
+        },
+        message: "Guest spin recorded successfully",
+      });
+      return;
+    }
+
     const session = await getActiveSession();
 
     if (!session) {
       throw new ApiError(400, "No active session", "NO_ACTIVE_SESSION");
     }
 
-    // Verify one-spin enforcement
     if (session.spinsUsed >= session.spinsAllowed) {
       throw new ApiError(
         400,
@@ -42,29 +73,25 @@ router.post("/spin", async (req, res, next) => {
       );
     }
 
-    // Get active offers
     const offers = await getActiveOffers();
 
     if (!offers.length) {
       throw new ApiError(400, "No active offers available", "NO_OFFERS");
     }
 
-    // Select random offer based on probability
     const selectedOffer = selectRandomOffer(offers);
 
     if (!selectedOffer) {
       throw new ApiError(500, "Failed to select reward", "SELECTION_ERROR");
     }
 
-    // Record spin
-    const spin = await recordSpin(
+    await recordSpin(
       session.customerId._id,
       session._id,
       session.billAmount,
       selectedOffer._id
     );
 
-    // Complete session
     const completedSession = await completeSession(session._id, selectedOffer._id);
 
     res.status(201).json({
