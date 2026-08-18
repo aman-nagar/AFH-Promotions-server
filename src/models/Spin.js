@@ -5,16 +5,21 @@ const spinSchema = new mongoose.Schema(
     customerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Customer",
-      required: true,
+      default: null,
     },
     sessionId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Session",
-      required: true,
+      default: null,
+    },
+    deviceId: {
+      type: String,
+      default: null,
+      index: true,
     },
     billAmount: {
       type: Number,
-      required: true,
+      default: 0,
     },
     rewardId: {
       type: mongoose.Schema.Types.ObjectId,

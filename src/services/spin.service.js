@@ -2,7 +2,7 @@ import { Spin } from "../models/Spin.js";
 import { ApiError } from "../middleware/errorHandler.js";
 
 /**
- * Record a completed spin
+ * Record a completed spin for a customer session
  */
 export async function recordSpin(customerId, sessionId, billAmount, rewardId) {
   if (!customerId || !sessionId || !rewardId) {
@@ -23,6 +23,28 @@ export async function recordSpin(customerId, sessionId, billAmount, rewardId) {
     .populate("rewardId");
 
   return savedSpin;
+}
+
+/**
+ * Record a guest/customer spin without requiring an active session.
+ * Used for mobile customer flow.
+ */
+export async function recordGuestSpin(deviceId, rewardId) {
+  if (!deviceId || !rewardId) {
+    throw new ApiError(400, "Invalid guest spin data", "INVALID_GUEST_SPIN");
+  }
+
+  const spin = new Spin({
+    customerId: null,
+    sessionId: null,
+    deviceId,
+    billAmount: 0,
+    rewardId,
+  });
+
+  await spin.save();
+
+  return await Spin.findById(spin._id).populate("rewardId");
 }
 
 /**
