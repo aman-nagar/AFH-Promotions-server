@@ -3,6 +3,9 @@ import {
   getOrCreateCustomer,
   getCustomerById,
   getAllCustomers,
+  deleteCustomer,
+  deleteCustomers,
+  deleteAllCustomers,
 } from "../services/customer.service.js";
 import { ApiError } from "../middleware/errorHandler.js";
 
@@ -57,6 +60,50 @@ router.get("/", async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete("/bulk-delete", async (req, res, next) => {
+  try {
+    const { customerIds = [] } = req.body || {};
+    const customers = await deleteCustomers(customerIds);
+
+    res.status(200).json({
+      success: true,
+      data: customers,
+      message: `${customers.length} customers deleted`,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete("/all", async (req, res, next) => {
+  try {
+    const customers = await deleteAllCustomers();
+
+    res.status(200).json({
+      success: true,
+      data: customers,
+      message: "All customers deleted",
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete("/:id", async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const customer = await deleteCustomer(id);
+
+    res.status(200).json({
+      success: true,
+      data: customer,
+      message: "Customer deleted successfully",
     });
   } catch (error) {
     next(error);

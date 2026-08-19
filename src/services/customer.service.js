@@ -41,6 +41,37 @@ export async function getCustomerById(customerId) {
 }
 
 /**
+ * Delete a customer by ID
+ */
+export async function deleteCustomer(customerId) {
+  const customer = await getCustomerById(customerId);
+  await Customer.deleteOne({ _id: customerId });
+  return customer;
+}
+
+/**
+ * Delete many customers by array of IDs
+ */
+export async function deleteCustomers(customerIds = []) {
+  if (!Array.isArray(customerIds) || customerIds.length === 0) {
+    return [];
+  }
+
+  const customers = await Customer.find({ _id: { $in: customerIds } });
+  await Customer.deleteMany({ _id: { $in: customerIds } });
+  return customers;
+}
+
+/**
+ * Delete all customers
+ */
+export async function deleteAllCustomers() {
+  const customers = await Customer.find();
+  await Customer.deleteMany({});
+  return customers;
+}
+
+/**
  * Get all customers (admin/staff only)
  */
 export async function getAllCustomers(limit = 100, skip = 0) {
