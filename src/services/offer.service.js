@@ -33,7 +33,7 @@ export async function getOfferById(offerId) {
 /**
  * Create new offer
  */
-export async function createOffer(name, type, value, probability) {
+export async function createOffer(name, type, value, probability, imageUrl = "") {
   if (!name || !type) {
     throw new ApiError(400, "Name and type are required", "INVALID_OFFER");
   }
@@ -44,6 +44,7 @@ export async function createOffer(name, type, value, probability) {
     value: Number(value) || 0,
     probability: Number(probability) || 0,
     active: true,
+    imageUrl: imageUrl ? imageUrl.trim() : "",
   });
 
   await offer.save();
@@ -63,6 +64,8 @@ export async function updateOffer(offerId, updates) {
   if (typeof updates.probability !== "undefined")
     offer.probability = Number(updates.probability);
   if (typeof updates.active !== "undefined") offer.active = updates.active;
+  if (typeof updates.imageUrl !== "undefined")
+    offer.imageUrl = updates.imageUrl ? updates.imageUrl.trim() : "";
 
   await offer.save();
   return offer;
